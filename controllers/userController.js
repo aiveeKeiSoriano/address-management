@@ -51,9 +51,21 @@ const deleteRefresh = async (email) => {
     }
 }
 
+const checkRefresh = async (email, refresh) => {
+    let user = await User.findOne({ email })
+    if (!user) return { status: false, result: { message: 'User not found' } }
+    if (user.refresh === refresh) {
+        return { status: true, result: { message: 'Valid Refresh' } }
+    }
+    else {
+        return { status: false, result: { message: 'Invalid refresh token' } }
+    }
+}
+
 module.exports = {
     addUser,
     findUser,
     addRefresh,
-    deleteRefresh
+    deleteRefresh,
+    checkRefresh
 }

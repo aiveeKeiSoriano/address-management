@@ -63,6 +63,37 @@ router.post('/logout', verifyToken, async (req, res) => {
     let header = req.headers['authorization']
     let token = header.split(' ')[1]
     let user = jwt.decode(token)
+    let result = await userController.deleteRefresh(user.email)
+    if (result.status) {
+        res.status(200).send(result.result);
+    }
+    else {
+        res.status(401).send(result.result);
+    }
 })
+
+
+router.post("/token", async (req, res) => {
+    const { refresh } = req.body;
+    console.log("refresh")
+      try {
+        let user = jwt.verify(refresh, process.env.REFRESH_TOKEN_SECRET);
+        let check = await userController.checkRefresh(user.email, refresh)
+          if (check.status) {
+              let payload = {
+                  email: user.email,
+              };
+              let token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
+                  expiresIn: process.env.ACCESS_TOKEN_EXPIRE_TIME,
+              });
+              res.status(200).send({ access_token: token });
+          }
+          else {
+            res.status(403).send(check.result);
+          }
+      } catch (e) {
+        res.status(403).send({ message: "Invalid refresh token" });
+      }
+  });
 
 module.exports = router;
